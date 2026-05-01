@@ -5,6 +5,14 @@ function escapeAttr(value: string): string {
     .replace(/</g, "&lt;");
 }
 
+export type PreviewBuildOptions = {
+  headSnippet?: string;
+  htmlClass?: string;
+};
+
+const DEFAULT_VIEWPORT =
+  '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
+
 /**
  * Assemble a full HTML document for the sandboxed preview iframe.
  */
@@ -13,6 +21,7 @@ export function buildPreviewDocument(
   css: string,
   js: string,
   cdnUrls: string[],
+  options?: PreviewBuildOptions,
 ): string {
   const linkTags = cdnUrls
     .filter((u) => u.toLowerCase().endsWith(".css"))
@@ -28,14 +37,19 @@ export function buildPreviewDocument(
     .join("\n");
 
   const safeCss = css.replace(/<\/style/gi, "<\\/style");
+  const headExtra = (options?.headSnippet ?? "").trim();
+  const classAttr = (options?.htmlClass ?? "").trim();
+  const htmlOpen = classAttr
+    ? `<html lang="en" class="${escapeAttr(classAttr)}">`
+    : `<html lang="en">`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+${htmlOpen}
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   ${linkTags}
-  <style>${safeCss}</style>
+  ${headExtra ? `${headExtra}\n  ` : ""}<style>${safeCss}</style>
 </head>
 <body>
 ${html}
@@ -49,4 +63,8 @@ ${js}
 </script>
 </body>
 </html>`;
+}
+
+export function getViewportMetaSnippet(): string {
+  return DEFAULT_VIEWPORT;
 }

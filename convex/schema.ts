@@ -18,6 +18,10 @@ export default defineSchema({
     css: v.string(),
     js: v.string(),
     cdnUrls: v.array(v.string()),
+    /** Raw snippets injected before </head> (meta, link, script). */
+    headSnippet: v.optional(v.string()),
+    /** Space-separated classes on the root <html> element. */
+    htmlClass: v.optional(v.string()),
     isPublic: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),

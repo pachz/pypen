@@ -6,6 +6,8 @@ const MAX_CONTENT = 400_000;
 const MAX_TITLE = 200;
 const MAX_CDN_URLS = 20;
 const MAX_URL_LENGTH = 2048;
+const MAX_HEAD_SNIPPET = 100_000;
+const MAX_HTML_CLASS = 500;
 
 function assertPenContent(html: string, css: string, js: string) {
   if (html.length > MAX_CONTENT || css.length > MAX_CONTENT || js.length > MAX_CONTENT) {
@@ -113,6 +115,8 @@ export const createPen = mutation({
       css: "",
       js: "",
       cdnUrls: [],
+      headSnippet: "",
+      htmlClass: "",
       isPublic: true,
       createdAt: now,
       updatedAt: now,
@@ -128,6 +132,8 @@ export const updatePen = mutation({
     css: v.optional(v.string()),
     js: v.optional(v.string()),
     cdnUrls: v.optional(v.array(v.string())),
+    headSnippet: v.optional(v.string()),
+    htmlClass: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -153,6 +159,16 @@ export const updatePen = mutation({
     const cdnUrls = args.cdnUrls ?? pen.cdnUrls;
     assertCdnUrls(cdnUrls);
 
+    const headSnippet = args.headSnippet ?? pen.headSnippet ?? "";
+    if (headSnippet.length > MAX_HEAD_SNIPPET) {
+      throw new Error("Head snippet is too large");
+    }
+
+    const htmlClass = args.htmlClass ?? pen.htmlClass ?? "";
+    if (htmlClass.length > MAX_HTML_CLASS) {
+      throw new Error("HTML class string is too long");
+    }
+
     const isPublic = args.isPublic ?? pen.isPublic;
 
     await ctx.db.patch(args.penId, {
@@ -161,6 +177,8 @@ export const updatePen = mutation({
       css,
       js,
       cdnUrls,
+      headSnippet,
+      htmlClass,
       isPublic,
       updatedAt: Date.now(),
     });

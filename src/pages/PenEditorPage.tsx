@@ -1,5 +1,12 @@
-import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useConvexConnectionState, useMutation, useQuery } from "convex/react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -28,6 +35,8 @@ export function PenEditorPage() {
   const pen = useQuery(api.pens.getPen, penId ? { penId } : "skip");
   const myUserId = useQuery(api.profiles.getMyUserId);
   const updatePen = useMutation(api.pens.updatePen);
+  const connection = useConvexConnectionState();
+  const [loadStalled, setLoadStalled] = useState(false);
 
   const [html, setHtml] = useState("");
   const [css, setCss] = useState("");
@@ -87,6 +96,16 @@ export function PenEditorPage() {
   }, [pen]);
 
   useEffect(() => {
+    if (pen !== undefined) {
+      setLoadStalled(false);
+      return;
+    }
+    const t = window.setTimeout(() => setLoadStalled(true), 10_000);
+    return () => window.clearTimeout(t);
+  }, [pen]);
+
+  /** Apply local editor prefs before paint so preview mode matches storage on first paint. */
+  useLayoutEffect(() => {
     if (!penId) {
       return;
     }
@@ -102,7 +121,8 @@ export function PenEditorPage() {
         (myUserId !== undefined && pen.userId !== myUserId)),
   );
 
-  useEffect(() => {
+  /** Sync Convex pen → local editor state before paint so preview/iframes never flash empty after refresh. */
+  useLayoutEffect(() => {
     if (!pen) {
       return;
     }
@@ -247,6 +267,12 @@ export function PenEditorPage() {
   }
 
   if (pen === undefined) {
+    const status =
+      connection.hasEverConnected && !connection.isWebSocketConnected
+        ? "Reconnecting to server…"
+        : !connection.hasEverConnected
+          ? "Connecting to server…"
+          : "Loading pen…";
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <TopNav
@@ -259,8 +285,24 @@ export function PenEditorPage() {
             </Link>
           }
         />
-        <div className="flex flex-1 items-center justify-center p-8">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <p className="text-sm text-slate-500">{status}</p>
+          {loadStalled ? (
+            <div className="flex max-w-sm flex-col items-center gap-3">
+              <p className="text-sm text-slate-400">
+                This is taking longer than usual. Check your connection, or try
+                reloading the page.
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="cursor-pointer rounded-lg border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/40"
+              >
+                Reload page
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     );
@@ -278,6 +320,30 @@ export function PenEditorPage() {
           >
             Back to your pens
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /** Second Convex query — wait so readOnly + preview prefs are consistent before mounting iframe. */
+  const sessionResolved = myUserId !== undefined;
+  if (!sessionResolved) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <TopNav
+          penTitle={pen.title}
+          penToolbar={
+            <Link
+              to={`/details/${penId}`}
+              className="cursor-pointer text-xs text-slate-400 hover:text-white sm:text-sm"
+            >
+              Details
+            </Link>
+          }
+        />
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <p className="text-sm text-slate-500">Loading session…</p>
         </div>
       </div>
     );
@@ -356,6 +422,7 @@ export function PenEditorPage() {
 
       <div className="flex min-h-0 flex-1 flex-col">
         <PenEditorPanels
+          key={pen._id}
           layout={editorLayout}
           isDesktop={isDesktop}
           html={html}

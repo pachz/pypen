@@ -1,4 +1,5 @@
 import Editor from "@monaco-editor/react";
+import type { ReactNode } from "react";
 import {
   Panel,
   PanelGroup,
@@ -6,6 +7,14 @@ import {
 } from "react-resizable-panels";
 import { PreviewFrame } from "./PreviewFrame";
 import type { EditorLayoutMode } from "../lib/editorLayout";
+
+function MonacoLoadingFallback(): ReactNode {
+  return (
+    <div className="flex h-full min-h-[100px] w-full items-center justify-center bg-surface-900">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+    </div>
+  );
+}
 
 type Props = {
   layout: EditorLayoutMode;
@@ -56,6 +65,7 @@ function HtmlPane(
           defaultLanguage="html"
           theme="vs-dark"
           value={p.html}
+          loading={<MonacoLoadingFallback />}
           onChange={p.readOnly ? undefined : (v) => p.onHtml(v ?? "")}
           options={editorOptions(p.readOnly, {
             tabSize: p.tabSize,
@@ -83,6 +93,7 @@ function CssPane(
           defaultLanguage="css"
           theme="vs-dark"
           value={p.css}
+          loading={<MonacoLoadingFallback />}
           onChange={p.readOnly ? undefined : (v) => p.onCss(v ?? "")}
           options={editorOptions(p.readOnly, {
             tabSize: p.tabSize,
@@ -110,6 +121,7 @@ function JsPane(
           defaultLanguage="javascript"
           theme="vs-dark"
           value={p.js}
+          loading={<MonacoLoadingFallback />}
           onChange={p.readOnly ? undefined : (v) => p.onJs(v ?? "")}
           options={editorOptions(p.readOnly, {
             tabSize: p.tabSize,

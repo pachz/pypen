@@ -87,7 +87,14 @@ export const getPen = query({
     if (!pen.isPublic && pen.userId !== userId) {
       return null;
     }
-    return pen;
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", pen.userId))
+      .unique();
+    return {
+      ...pen,
+      authorUsername: profile?.username ?? "unknown",
+    };
   },
 });
 
@@ -133,10 +140,10 @@ export const updatePen = mutation({
       throw new Error("Pen not found or access denied");
     }
 
-    const title = args.title ?? pen.title;
-    if (title.length > MAX_TITLE) {
-      throw new Error("Title is too long");
-    }
+    const rawTitle = args.title ?? pen.title;
+    const trimmed = rawTitle.trim();
+    const title =
+      trimmed.length > 0 ? trimmed.slice(0, MAX_TITLE) : "Untitled Pen";
 
     const html = args.html ?? pen.html;
     const css = args.css ?? pen.css;

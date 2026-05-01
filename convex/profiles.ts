@@ -87,3 +87,10 @@ export const getProfileByUserId = query({
       .unique();
   },
 });
+
+export const getMyUserId = query({
+  args: {},
+  handler: async (ctx) => {
+    return (await getAuthUserId(ctx)) ?? null;
+  },
+});

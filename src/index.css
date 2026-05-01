@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", var(--font-sans);
+  --color-surface-950: #070a12;
+  --color-surface-900: #0c1222;
+  --color-surface-850: #111827;
+  --color-surface-800: #151f32;
+  --color-accent: #38bdf8;
+  --color-accent-dim: #0ea5e9;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply min-h-screen bg-surface-950 text-slate-100 font-sans;
+  }
+}

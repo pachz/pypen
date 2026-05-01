@@ -24,7 +24,7 @@ export function HomePage() {
           Sketch HTML, CSS, and JavaScript with a live preview.
         </h1>
         <p className="mt-4 max-w-xl text-lg text-slate-400">
-          pypen is a focused editor for quick UI experiments—split panes, instant
+          PyPen is a focused editor for quick UI experiments—split panes, instant
           preview, and optional CDN scripts when you need a library.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">

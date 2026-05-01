@@ -21,7 +21,7 @@ export function TopNav() {
           to="/"
           className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl"
         >
-          pypen
+          PyPen
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
           <NavLink to="/" className={navLinkClass} end>

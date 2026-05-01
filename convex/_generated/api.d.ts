@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as codepenImport from "../codepenImport.js";
 import type * as http from "../http.js";
 import type * as pens from "../pens.js";
 import type * as profiles from "../profiles.js";
@@ -21,6 +22,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  codepenImport: typeof codepenImport;
   http: typeof http;
   pens: typeof pens;
   profiles: typeof profiles;

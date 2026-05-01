@@ -1,6 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 const MAX_CONTENT = 400_000;
 const MAX_TITLE = 200;
@@ -97,6 +97,49 @@ export const getPen = query({
       ...pen,
       authorUsername: profile?.username ?? "unknown",
     };
+  },
+});
+
+/** Called from `codepenImport.importFromCodePen` after fetching public pen source. */
+export const createPenFromCodePenImport = internalMutation({
+  args: {
+    userId: v.id("users"),
+    title: v.string(),
+    html: v.string(),
+    css: v.string(),
+    js: v.string(),
+    cdnUrls: v.array(v.string()),
+    headSnippet: v.string(),
+    htmlClass: v.string(),
+  },
+  handler: async (ctx, args) => {
+    assertPenContent(args.html, args.css, args.js);
+    assertCdnUrls(args.cdnUrls);
+    const headSnippet = args.headSnippet;
+    if (headSnippet.length > MAX_HEAD_SNIPPET) {
+      throw new Error("Head snippet is too large");
+    }
+    const htmlClass = args.htmlClass;
+    if (htmlClass.length > MAX_HTML_CLASS) {
+      throw new Error("HTML class string is too long");
+    }
+    const rawTitle = args.title.trim();
+    const title =
+      rawTitle.length > 0 ? rawTitle.slice(0, MAX_TITLE) : "Untitled Pen";
+    const now = Date.now();
+    return await ctx.db.insert("pens", {
+      userId: args.userId,
+      title,
+      html: args.html,
+      css: args.css,
+      js: args.js,
+      cdnUrls: args.cdnUrls,
+      headSnippet,
+      htmlClass,
+      isPublic: true,
+      createdAt: now,
+      updatedAt: now,
+    });
   },
 });
 

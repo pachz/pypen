@@ -14,6 +14,7 @@
     "@auth/core": "0.37.0",
     "@convex-dev/auth": "^0.0.80",
     "@monaco-editor/react": "^4.7.0",
+    "codepen-fetcher": "^1.3.0",
     "convex": "^1.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

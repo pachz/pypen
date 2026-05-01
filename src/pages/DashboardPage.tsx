@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { ImportCodePenModal } from "../components/ImportCodePenModal";
 
 function formatTime(ts: number) {
   return new Intl.DateTimeFormat(undefined, {
@@ -18,6 +19,7 @@ export function DashboardPage() {
   const deletePen = useMutation(api.pens.deletePen);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Id<"pens"> | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const onCreate = useCallback(async () => {
     setCreating(true);
@@ -29,8 +31,27 @@ export function DashboardPage() {
     }
   }, [createPen, navigate]);
 
+  const onCodePenImported = useCallback(
+    (penId: Id<"pens">, warnings: string[]) => {
+      if (warnings.length > 0) {
+        window.alert(
+          ["Imported with notes:", "", ...warnings.map((w) => `• ${w}`)].join(
+            "\n",
+          ),
+        );
+      }
+      navigate(`/pen/${penId}`);
+    },
+    [navigate],
+  );
+
   return (
     <div className="space-y-8">
+      <ImportCodePenModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={onCodePenImported}
+      />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-white">Your pens</h1>
@@ -38,14 +59,24 @@ export function DashboardPage() {
             Create a new pen or jump back into an existing one.
           </p>
         </div>
-        <button
-          type="button"
-          disabled={creating}
-          onClick={() => void onCreate()}
-          className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-surface-950 shadow-lg shadow-sky-500/15 transition hover:bg-sky-300 disabled:opacity-50"
-        >
-          {creating ? "Creating…" : "New pen"}
-        </button>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <button
+            type="button"
+            disabled={creating}
+            onClick={() => setImportOpen(true)}
+            className="cursor-pointer rounded-xl border border-white/15 px-5 py-3 text-sm font-medium text-white transition hover:border-accent/50 hover:text-accent disabled:opacity-50"
+          >
+            Import from CodePen
+          </button>
+          <button
+            type="button"
+            disabled={creating}
+            onClick={() => void onCreate()}
+            className="cursor-pointer rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-surface-950 shadow-lg shadow-sky-500/15 transition hover:bg-sky-300 disabled:opacity-50"
+          >
+            {creating ? "Creating…" : "New pen"}
+          </button>
+        </div>
       </div>
 
       {pens === undefined ? (

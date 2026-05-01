@@ -31,6 +31,19 @@ export function PenEditorPage() {
   const [cdnDraft, setCdnDraft] = useState("");
   const hydratedId = useRef<string | null>(null);
 
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : true,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   const readOnly = Boolean(
     pen &&
       (myUserId === null ||
@@ -197,7 +210,10 @@ export function PenEditorPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <PanelGroup direction="horizontal" className="min-h-0 flex-1">
+        <PanelGroup
+          direction={isDesktop ? "horizontal" : "vertical"}
+          className="min-h-0 flex-1"
+        >
           <Panel defaultSize={55} minSize={30} className="min-h-0 min-w-0">
             <PanelGroup direction="vertical" className="h-full min-h-[200px]">
               <Panel defaultSize={34} minSize={15} className="min-h-0">
@@ -276,7 +292,13 @@ export function PenEditorPage() {
               </Panel>
             </PanelGroup>
           </Panel>
-          <PanelResizeHandle className="hidden w-1 bg-white/10 hover:bg-accent/40 lg:block" />
+          <PanelResizeHandle
+            className={
+              isDesktop
+                ? "w-1 bg-white/10 hover:bg-accent/40"
+                : "h-1 w-full bg-white/10 hover:bg-accent/40"
+            }
+          />
           <Panel
             defaultSize={45}
             minSize={25}
